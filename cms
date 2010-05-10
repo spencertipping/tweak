@@ -666,11 +666,29 @@ use File::Path     'mkpath';
 use File::Basename 'dirname';
 __JTb5cVBtOX4mLfswXlWFwQLMo3fXUAd7Gd06IUVBctk
 
-meta::library('post', <<'__twHoPLf6QIqLjWfchpordXAhueEGILUVH25yvnUQXxE');
+meta::library('post', <<'__OLhfScgmOdKamhdlncOxzWtee08us/M2aAC0VxgLzlg');
 # A data model for blog posts. Stores metadata and renders entries sorted by priority.
 
 package post;
-__twHoPLf6QIqLjWfchpordXAhueEGILUVH25yvnUQXxE
+sub new    {my ($class, $post) = @_; bless simplemeta::parse($post), $class}
+__OLhfScgmOdKamhdlncOxzWtee08us/M2aAC0VxgLzlg
+
+meta::library('simplemeta', <<'__zw3xv3WFV6FqB/Hmvlkb2oqIprPmEqGPt2VLwUdmfYY');
+# A very simple metadata library. Inspired by YAML, and here is the format:
+#
+# key: value
+# key: value
+# ...
+# (blank line)
+# text
+
+package simplemeta;
+
+sub parse {my ($value, %result) = @_; my ($attrs, $document) = split(/\n\n/, $value, 2);
+           m/^\s*([^:]):\s*(.*)$/o and $result{$1} = $2 for split /\n/, $attrs;
+           $result{_} = $document;
+           \%result}
+__zw3xv3WFV6FqB/Hmvlkb2oqIprPmEqGPt2VLwUdmfYY
 
 meta::library('terminal', <<'__bakqo5o+Exi5Kw4onujvi9Pu3zR9lQA8cPKfYj6L74Q');
 # Functions for nice-looking terminal output.
@@ -704,7 +722,7 @@ websites and directory structures. It's assumed that everything you're producing
 Objects are converted into Perl hashes somehow. So you define a new data type that accepts text in some format and renders it into a hash that can be used in a renderer.
 __OR/V2QYD/EJ4cKzRm0DCEwG5qJ+h/3jgHSonJqg4eUY
 
-meta::task('bundles', <<'__TPvd8IPZF5gZ754D0spxdTNERWlGBlX3MN4Wh83ddW8');
+meta::task('bundles', <<'__Tf9jBezydtrTtLqlCVzjRw573EMIPhqKUX9u1XaITrA');
 # The client has a model that involves 'resource bundles' -- that is, it can grab certain resources and render them interactively, and the more recent resources are loaded first to provide a
 # more useful browsing experience. When we're compiling things like blog posts and pages, we bundle them into resources for the client.
 
@@ -716,8 +734,8 @@ my @bundles = bundle::generate_bundles(map(post->new($_)->render(), @posts), map
 
 mkdir "$directory/bundles";
 file::write("$directory/bundles/" . $_->name(), $_->render(), clobber => 1) for @bundles;
-file::write("$directory/bundles/index", join("\n", map $_->name, @bundles));
-__TPvd8IPZF5gZ754D0spxdTNERWlGBlX3MN4Wh83ddW8
+file::write("$directory/bundles/index", join("\n", map $_->name(), @bundles));
+__Tf9jBezydtrTtLqlCVzjRw573EMIPhqKUX9u1XaITrA
 
 meta::task('files', <<'__+F/63KYrZ9pDeZDJK5oK3cxN7LQy+/bOIe5ld8YEtnU');
 # Writes static files. This is a subordinate task, so it expects to be given the directory into which the files should be placed.
