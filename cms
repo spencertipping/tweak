@@ -101,6 +101,15 @@ meta::define_form 'note', sub {
 };
 __TGOjJwmj+QJp1giUQqg2bEaQe8RvqnrFEqyZhIpSC34
 
+meta::meta('datatypes::task', <<'__1FPRrgZpuIfNRQEHhnUgXotLieo9p22lJMtN8veUg9s');
+meta::define_form 'task', sub {
+  my ($name, $value) = @_;
+  $externalized_functions{$name} = "task::$name";
+  *{$name} = eval "sub {my \$task_name = '$name';\n$value\n}";
+  carp $@ if $@;
+};
+__1FPRrgZpuIfNRQEHhnUgXotLieo9p22lJMtN8veUg9s
+
 meta::meta('datatypes::vim-highlighter', <<'__vsGBLVDC3S+pX/k/zl5CgXeAQz2QjpBkLgx0CJ4vcn0');
 meta::define_form 'vim_highlighter', \&meta::bootstrap::implementation;
 __vsGBLVDC3S+pX/k/zl5CgXeAQz2QjpBkLgx0CJ4vcn0
