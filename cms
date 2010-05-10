@@ -187,6 +187,15 @@ meta::data('name', <<'__Bp31ejpkVZDIvQDf/7K9lJacaRhXogx5NqXgb6EiqPM');
 cms
 __Bp31ejpkVZDIvQDf/7K9lJacaRhXogx5NqXgb6EiqPM
 
+meta::file('index.html', <<'__CydvoM6kHlh1uU+SXb47ASXOtDIvdjAH0O8JcwLvQo4');
+<html>
+  <head>
+  </head>
+  <body>
+  </body>
+</html>
+__CydvoM6kHlh1uU+SXb47ASXOtDIvdjAH0O8JcwLvQo4
+
 meta::function('add-to', <<'__KBgra0vG1gIsUI8CCVf4ZEdCatZDCdVO6HuUx+jOJ9Q');
 my ($filename) = @_;
 my @members = grep /^implementation::/, keys %data;
@@ -679,26 +688,34 @@ websites and directory structures. It's assumed that everything you're producing
 Objects are converted into Perl hashes somehow. So you define a new data type that accepts text in some format and renders it into a hash that can be used in a renderer.
 __OR/V2QYD/EJ4cKzRm0DCEwG5qJ+h/3jgHSonJqg4eUY
 
-meta::task('main', <<'__oskeX/7iN6vHLNciNZCRs1bVRWwXRtiKCjRx5yUIKQQ');
-# The main task for your website.
-# For my site, for example, this is used to compile the blog and project pages. To run this task, type 'main run' on the shell.
-
-my @posts = grep /^post::/, sort keys %data;
-my @pages = grep /^page::/, sort keys %data;
-my @files = grep /^file::/, sort keys %data;
-
+meta::task('bundles', <<'__TPvd8IPZF5gZ754D0spxdTNERWlGBlX3MN4Wh83ddW8');
 # The client has a model that involves 'resource bundles' -- that is, it can grab certain resources and render them interactively, and the more recent resources are loaded first to provide a
 # more useful browsing experience. When we're compiling things like blog posts and pages, we bundle them into resources for the client.
 
-mkpath $task_name;
-mkpath "$task_name/bundles";
-
-(my $contents = retrieve($_)) && s/^file::// && mkpath($_) && file::write($_, $contents, clobber => 1) for @files;
+my ($directory) = @_;
+my @posts = grep /^post::/, sort keys %data;
+my @pages = grep /^page::/, sort keys %data;
 
 my @bundles = bundle::generate_bundles(map(post->new($_)->render(), @posts), map(page->new($_)->render(), @pages));
-file::write('bundles/' . $_->name(), $_->render(), clobber => 1) for @bundles;
-file::write('bundles/index', join("\n", map $_->name, @bundles));
-__oskeX/7iN6vHLNciNZCRs1bVRWwXRtiKCjRx5yUIKQQ
+
+mkdir "$directory/bundles";
+file::write("$directory/bundles/" . $_->name(), $_->render(), clobber => 1) for @bundles;
+file::write("$directory/bundles/index", join("\n", map $_->name, @bundles));
+__TPvd8IPZF5gZ754D0spxdTNERWlGBlX3MN4Wh83ddW8
+
+meta::task('files', <<'__+F/63KYrZ9pDeZDJK5oK3cxN7LQy+/bOIe5ld8YEtnU');
+# Writes static files. This is a subordinate task, so it expects to be given the directory into which the files should be placed.
+s/^file::// && (mkpath(dirname("$_[0]/$_")), file::write("$_[0]/$_", retrieve("file::$_"), clobber => 1)) for grep /^file::/, sort keys %data;
+__+F/63KYrZ9pDeZDJK5oK3cxN7LQy+/bOIe5ld8YEtnU
+
+meta::task('main', <<'__fJe399ZXD1x/h5fQPwX44lIR5KM3h25tYrdFnm6jd+Y');
+# The main task for your website.
+# For my site, for example, this is used to compile the blog and project pages. To run this task, type 'main run' on the shell.
+
+mkpath $task_name;
+files  ('run', $task_name);
+bundles('run', $task_name);
+__fJe399ZXD1x/h5fQPwX44lIR5KM3h25tYrdFnm6jd+Y
 
 meta::internal('runtime', <<'__YPmIzwZkTg8URmPfjiwGRG4VDUF2ZCJqTEz+gjETYLQ');
 my $initial_state = sha256_base64 serialize();
