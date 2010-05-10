@@ -45,6 +45,10 @@ meta::define_form 'data', sub {
 };
 __j7lFraXGRfKk8ymj2mDJhNbCQMk9FSciN1hdDhzM99U
 
+meta::meta('datatypes::file', <<'__nKC16T08JMQcmbS9wxNVea5ymdev21drePRunS7XWM4');
+meta::define_form 'file', sub {};
+__nKC16T08JMQcmbS9wxNVea5ymdev21drePRunS7XWM4
+
 meta::meta('datatypes::function', <<'__XSIHGGHv0Sh0JBj9KIrP/OzuuB2epyvn9pgtZyWE6t0');
 meta::define_form 'function', sub {
   my ($name, $value) = @_;
@@ -62,12 +66,15 @@ meta::define_form 'internal_function', sub {
 };
 __heBxmlI7O84FgR+9+ULeiCTWJ4hqd079Z02rZnl9Ong
 
-meta::meta('datatypes::library', <<'__3RHc2q2OKjeHL1QRq6jhHHCeSrNLDPWTwSax7MclXRE');
+meta::meta('datatypes::library', <<'__Uu9nRiHABRn+x19zBWmHpJF8gbfMA5v5MlpNoSE8MqE');
 meta::define_form 'library', sub {
-  eval $_[1];
+  my ($name, $value) = @_;
+  eval $value;
+  $externalized_functions{$name} = "library::$name";
+  *{$name} = sub {edit("library::$name")};
   warn $@ if $@;
 };
-__3RHc2q2OKjeHL1QRq6jhHHCeSrNLDPWTwSax7MclXRE
+__Uu9nRiHABRn+x19zBWmHpJF8gbfMA5v5MlpNoSE8MqE
 
 meta::meta('datatypes::list-type', <<'__OKczvJ+6wi8VPNFcZ9ohlXjw+ychodWCfcELdli9p+w');
 meta::define_form '_list_type', sub {
@@ -101,14 +108,19 @@ meta::define_form 'note', sub {
 };
 __TGOjJwmj+QJp1giUQqg2bEaQe8RvqnrFEqyZhIpSC34
 
-meta::meta('datatypes::task', <<'__1FPRrgZpuIfNRQEHhnUgXotLieo9p22lJMtN8veUg9s');
+meta::meta('datatypes::task', <<'__rmslQeY/5s6UoZJ1hFdqIU9Ph7j40lcYsRRmZTtShGM');
 meta::define_form 'task', sub {
   my ($name, $value) = @_;
   $externalized_functions{$name} = "task::$name";
-  *{$name} = eval "sub {my \$task_name = '$name';\n$value\n}";
+  my $thunk = eval "sub {my \$task_name = '$name';\n$value\n}";
+  *{$name} = sub {
+    my $command = shift @_;
+    edit("task::$name") unless $command;
+    &$thunk(@_)         if     $command eq 'run';
+  };
   carp $@ if $@;
 };
-__1FPRrgZpuIfNRQEHhnUgXotLieo9p22lJMtN8veUg9s
+__rmslQeY/5s6UoZJ1hFdqIU9Ph7j40lcYsRRmZTtShGM
 
 meta::meta('datatypes::vim-highlighter', <<'__vsGBLVDC3S+pX/k/zl5CgXeAQz2QjpBkLgx0CJ4vcn0');
 meta::define_form 'vim_highlighter', \&meta::bootstrap::implementation;
@@ -161,14 +173,15 @@ meta::data('default-action', <<'__zmNcTqv/Xk9W26j7HjnKI1UwqitrGFM+7xrzhiAWxXc');
 shell
 __zmNcTqv/Xk9W26j7HjnKI1UwqitrGFM+7xrzhiAWxXc
 
-meta::data('meta-associations', <<'__S6Cws215rfkeL7uHARRL6Hl6AerdHCmI86Od37/NZKg');
+meta::data('meta-associations', <<'__Q/15C8r3S1H9vDgPSGrli9FKOaMRuUFCq9Jr9h8+fjI');
 ^function:: .pl
 ^library:: .pl
 ^internal_function:: .pl
 ^meta:: .pl
 ^bootstrap:: .pl
 ^vim_highlighter:: .vim
-__S6Cws215rfkeL7uHARRL6Hl6AerdHCmI86Od37/NZKg
+^task:: .pl
+__Q/15C8r3S1H9vDgPSGrli9FKOaMRuUFCq9Jr9h8+fjI
 
 meta::data('name', <<'__Bp31ejpkVZDIvQDf/7K9lJacaRhXogx5NqXgb6EiqPM');
 cms
@@ -248,7 +261,7 @@ my $name = shift;
 grep {$_ eq $name} keys %data;
 __bxU1sDtIh3+P1x0HuuY0f7sKHr9qNZUEl64m2fvwmDk
 
-meta::function('export', <<'__GGT5NuryUwnWJLFk9QuWalyMXeo7uCT4nMAn/UnkCa4');
+meta::function('export', <<'__I4eRG7HtLDZhFgrlr0QDrQO5MRwJYGFlotQsWQIE/d8');
 # Exports data into a text file.
 #   export attr1 attr2 attr3 ... file.txt
 
@@ -261,15 +274,14 @@ if (@attributes) {
 } else {
   messages::error ("Not enough arguments");
 }
-
-__GGT5NuryUwnWJLFk9QuWalyMXeo7uCT4nMAn/UnkCa4
+__I4eRG7HtLDZhFgrlr0QDrQO5MRwJYGFlotQsWQIE/d8
 
 meta::function('grab', <<'__sXs1aeJVBERH6nWE7ZpWiIO5Cg7fSBWcoscDg1DHzD8');
 my ($filename, @attribute_names) = @_;
 associate("implementation::$_", `$filename cat $_`) for @attribute_names;
 __sXs1aeJVBERH6nWE7ZpWiIO5Cg7fSBWcoscDg1DHzD8
 
-meta::function('import', <<'__GfbLY6C546YO6McrmMsEzmhPS+Gdi7M0sI00aEVSto0');
+meta::function('import', <<'__7f1Q36AcIJ8/OaaYPGUq10PPFTKnEF0CMxS56DRsjKk');
 my $name  = pop @_;
 my @files = @_;
 
@@ -280,8 +292,7 @@ if (@files) {
 else {
   associate($name, join('', <STDIN>));
 }
-
-__GfbLY6C546YO6McrmMsEzmhPS+Gdi7M0sI00aEVSto0
+__7f1Q36AcIJ8/OaaYPGUq10PPFTKnEF0CMxS56DRsjKk
 
 meta::function('lock', <<'__pqf/HijyN91BWpnS+uWYip/mFhHhcd+M9/YdlYsvv9Y');
 my (undef, undef, $mode) = stat $0;
@@ -600,6 +611,42 @@ $noise =~ s/\//-/g;
 "$0.$noise";
 __zNSrihAkMKJG5spRYgcFdoNArFKig1u12gIp6gJ8pZw
 
+meta::library('bundle', <<'__ufpRykb45unmdizLElsE0OWUdmnJ1C35Lva4RB2zwLw');
+# Resource bundles.
+# These are collections of resources for the client. They are downloaded incrementally to maximize perceived loading speed, and each resource is prioritized to ensure that the most important
+# ones are loaded first.
+
+package bundle;
+
+my $optimum_size = 20000;
+
+sub generate_bundles {my @sorted = sort @_;
+                      my @bundles, @current;
+                      my $current_size = 0;     for (@sorted) {push @current, $_;
+                                                               $current_size += length $_;
+                                                               push @bundles, bundle->new(@current) and $current_size = @current = () if $current_size > $optimum_size}
+
+                                                push @bundles, bundle->new(@current) if @current;
+                      @bundles}
+
+sub new    {my ($class, $instance) = @_; bless $instance ||= [], $class}
+sub name   {my ($self) = @_; ::sha256_base64(join "\n\n", @$self)}
+sub render {my ($self, $destination) = @_; (my $name = $self->name()) . "\n" . join("\n$name\n", @$self)}
+__ufpRykb45unmdizLElsE0OWUdmnJ1C35Lva4RB2zwLw
+
+meta::library('modules', <<'__JTb5cVBtOX4mLfswXlWFwQLMo3fXUAd7Gd06IUVBctk');
+# Required modules. Putting them into this module means they won't be overwritten when we update-from another script.
+
+use File::Path     'mkpath';
+use File::Basename 'dirname';
+__JTb5cVBtOX4mLfswXlWFwQLMo3fXUAd7Gd06IUVBctk
+
+meta::library('post', <<'__twHoPLf6QIqLjWfchpordXAhueEGILUVH25yvnUQXxE');
+# A data model for blog posts. Stores metadata and renders entries sorted by priority.
+
+package post;
+__twHoPLf6QIqLjWfchpordXAhueEGILUVH25yvnUQXxE
+
 meta::library('terminal', <<'__bakqo5o+Exi5Kw4onujvi9Pu3zR9lQA8cPKfYj6L74Q');
 # Functions for nice-looking terminal output.
 
@@ -631,6 +678,27 @@ websites and directory structures. It's assumed that everything you're producing
 
 Objects are converted into Perl hashes somehow. So you define a new data type that accepts text in some format and renders it into a hash that can be used in a renderer.
 __OR/V2QYD/EJ4cKzRm0DCEwG5qJ+h/3jgHSonJqg4eUY
+
+meta::task('main', <<'__oskeX/7iN6vHLNciNZCRs1bVRWwXRtiKCjRx5yUIKQQ');
+# The main task for your website.
+# For my site, for example, this is used to compile the blog and project pages. To run this task, type 'main run' on the shell.
+
+my @posts = grep /^post::/, sort keys %data;
+my @pages = grep /^page::/, sort keys %data;
+my @files = grep /^file::/, sort keys %data;
+
+# The client has a model that involves 'resource bundles' -- that is, it can grab certain resources and render them interactively, and the more recent resources are loaded first to provide a
+# more useful browsing experience. When we're compiling things like blog posts and pages, we bundle them into resources for the client.
+
+mkpath $task_name;
+mkpath "$task_name/bundles";
+
+(my $contents = retrieve($_)) && s/^file::// && mkpath($_) && file::write($_, $contents, clobber => 1) for @files;
+
+my @bundles = bundle::generate_bundles(map(post->new($_)->render(), @posts), map(page->new($_)->render(), @pages));
+file::write('bundles/' . $_->name(), $_->render(), clobber => 1) for @bundles;
+file::write('bundles/index', join("\n", map $_->name, @bundles));
+__oskeX/7iN6vHLNciNZCRs1bVRWwXRtiKCjRx5yUIKQQ
 
 meta::internal('runtime', <<'__YPmIzwZkTg8URmPfjiwGRG4VDUF2ZCJqTEz+gjETYLQ');
 my $initial_state = sha256_base64 serialize();
